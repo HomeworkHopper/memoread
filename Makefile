@@ -5,8 +5,8 @@ BIN = $(OUT)/main
 
 CC = gcc
 CPPFLAGS = -I$(INC) -I$(SRC)
-CFLAGS = -Wall -Wextra -Werror -std=c99 -pedantic
-LDLIBS =
+CFLAGS = -Wall -Wextra -Werror
+LDLIBS = -lrt
 
 MKDIR = mkdir -p
 SRCs := $(shell find $(SRC) -name "*.c")
