@@ -1,41 +1,25 @@
-include sources.mk
+INC = include
+SRC = src
+OUT = build
+BIN = $(OUT)/main
 
-.PHONY: all
+CC = gcc
+CPPFLAGS = -I$(INC) -I$(SRC)
+CFLAGS = -Wall -Wextra -Werror -std=c99 -pedantic
+LDLIBS =
 
-TARGET := build/app
+MKDIR = mkdir -p
+SRCs := $(shell find $(SRC) -name "*.c")
+OBJs := $(subst $(SRC), $(OUT), $(SRCs:.c=.o))
 
-all: $(TARGET)
+all: $(BIN)
 
-define app_build_dir
-$(1):
-	mkdir -p $(1)
+$(BIN): $(OBJs)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(OBJs) -o $@ $(LDLIBS)
 
-endef
+$(OBJs): $(SRCs)
+	$(MKDIR) $(dir $@)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $(subst $(OUT), $(SRC), $(@:.o=.c)) -o $@
 
-obj_from_src = $(patsubst %.c,build/%.o,$(1))
-
-OBJS := $(call obj_from_src,$(SRC))
-
-$(info SRC == $(SRC))
-$(info OBJS == $(OBJS))
-
-$(foreach d,$(sort $(dir $(OBJS))),$(info $(call app_build_dir,$(d))))
-$(foreach d,$(sort $(dir $(OBJS))),$(eval $(call app_build_dir,$(d))))
-
-# NOTE: this is "CCFLAGS", not CFLAGS.
-CCFLAGS += -D_GNU_SOURCE -pthread -I. -O1
-
-define app_compile_src
-$(call obj_from_src,$(1)): $(1) | $(dir $(call obj_from_src,$(1)))
-	$(CC) -c $(CCFLAGS) -o $(call obj_from_src,$(1)) $(1)
-
-endef
-
-$(foreach src,$(SRC),$(info $(call app_compile_src,$(src))))
-$(foreach src,$(SRC),$(eval $(call app_compile_src,$(src))))
-
-LDLIBS += -lpthread -lrt -lssl -lcrypto
-
-$(TARGET): $(OBJS) | build/
-	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(LDLIBS)
-
+clean:
+	$(RM) -R $(OUT)
